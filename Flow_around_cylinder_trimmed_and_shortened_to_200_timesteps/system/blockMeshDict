@@ -1,0 +1,163 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | foam-extend: Open Source CFD                    |
+|  \\    /   O peration     | Version:     4.0                                |
+|   \\  /    A nd           | Web:         http://www.foam-extend.org         |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant/polyMesh";
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1; //all coordinates are in default centimeter, convert to meter is 0.01. 
+
+
+vertices
+(
+    // pre-block -0.5<z<0.5
+	(-15 -4 0.5)// vertex 0
+	(-10 -4 0.5) // vertex 1
+	(-10 -4 -0.5) // vertex 2
+	(-15 -4 -0.5) // vertex 3
+	
+	(-15 4 0.5) // vertex 4
+	(-10 4 0.5) // vertex 5
+	(-10 4  -0.5) //vertex 6
+	(-15 4 -0.5) // vertex 7
+
+
+    // obstacle blocks
+	// bottom
+	(10 -4 0.5) //vertex 8
+	(10 -4 -0.5) // vertex 9
+	
+	(-0.353553391 -0.353553391 0.5) //vertex10
+	(0.353553391 -0.353553391 0.5) //vertex11
+	(0.353553391 -0.353553391 -0.5) //vertex12
+	(-0.353553391 -0.353553391 -0.5) //vertex13
+	// left
+	(-0.353553391 0.353553391 0.5)// vertex 14
+	(-0.353553391 0.353553391 -0.5)// vertex 15
+		
+	// top
+	(0.353553391 0.353553391 0.5)// vertex 16
+	(0.353553391 0.353553391 -0.5)// vertex 17
+	(10 4 0.5) // vertex 18
+	(10 4 -0.5) // vertex 19
+	// right
+	
+ // all the vertices are already defined
+
+
+    // post-block
+        (15 -4 0.5) // vertex 20
+        (15 -4 -0.5) // vertex 21
+        (15 4 0.5) // vertex 22
+        (15 4 -0.5)// vertex 23
+    
+    
+    
+);
+
+blocks
+(
+    // pre-block
+    hex ( 0  1  2  3  4  5  6  7) ( 10 1 30) simpleGrading (1 1 1) //red block. x direction is divided by 60 cells. y direction is divided by 30. zed direction is 1 cell thick. Inverseion of zed and y, due to the way we numbered the vertices. time 24:30 in Asmaa video. Because we went 0 1 2 3. 0 to 1 is the x dir. 1 to 2 is the y direction. 2 to 3 is the zed direction. 
+
+    // obstacle blocks (the trapezoids) 
+    hex ( 1  8  9  2 10 11 12 13) (     30 1 30) simpleGrading (1 1 1) // bottom
+    hex ( 1 10 13  2  5 14 15  6) (     30 1 30) simpleGrading (1 1 1) // left
+    hex (14 16 17 15  5 18 19  6) (     30 1 30) simpleGrading (1 1 1) // top
+    hex (11  8  9 12 16 18 19 17) (     30 1 30) simpleGrading (1 1 1) // right
+
+    // post-block
+    hex ( 8 20 21  9 18 22 23 19) (15 1 30) simpleGrading (1 1 1)
+);
+
+edges
+(
+    arc 10 11 (   0 -0.5  0.5) //interpolation point is the center of where the arc intersects the trapezoids. Front and back. 
+    arc 12 13 (   0 -0.5 -0.5)
+    arc 14 10 (-0.5    0  0.5)
+    arc 15 13 (-0.5    0 -0.5)
+    arc 14 16 (   0  0.5  0.5)
+    arc 15 17 (   0  0.5 -0.5)
+    arc 16 11 ( 0.5    0  0.5)
+    arc 17 12 ( 0.5    0 -0.5)
+);
+
+boundary
+(
+    inlet
+    {
+        type patch;
+        faces
+        (
+            ( 0  4  7  3)
+        );
+    }
+    outlet
+    {
+        type patch;
+        faces
+        (
+            (20 21 23 22)
+        );
+    }
+    wall
+    {
+        type wall;
+        faces
+        (
+            ( 4  5  6  7) //top of ecah shape
+            ( 5 18 19  6)
+            (18 22 23 19)
+
+            ( 0  1  2  3) // bottom of each shape
+            ( 1  8  9  2)
+            ( 8 20 21  9)
+        );
+    }
+    obstacle
+    {
+        type wall;
+        faces
+        (
+            (10 11 12 13) //small sides of the trapezoid
+            (11 16 17 12)
+            (14 16 17 15)
+            (10 14 15 13)
+        );
+    }
+    frontAndBack
+    {
+        type empty;
+        faces
+        (
+            ( 0  1  5  4) //2d shape front
+            ( 1 10 14  5)
+            (14 16 18  5)
+            (11  8 18 16)
+            ( 1  8 11 10)
+            ( 8 20 22 18)
+
+            ( 3  7  6  2) //2d shape back
+            ( 2  6 15 13)
+            (15  6 19 17)
+            (12 17 19  9)
+            ( 2 13 12  9)
+            ( 9 19 23 21)
+        );      
+    }
+);
+
+mergePatchPairs
+(
+);
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
